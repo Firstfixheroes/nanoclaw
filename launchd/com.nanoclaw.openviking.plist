@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nanoclaw.openviking</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/abdurraheemsmart/tools/openviking/.venv/bin/python</string>
+        <string>-m</string>
+        <string>openviking.server.bootstrap</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>1933</string>
+        <string>--config</string>
+        <string>/Users/abdurraheemsmart/.openviking/ov.conf</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/abdurraheemsmart/tools/openviking</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/abdurraheemsmart/tools/openviking/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/abdurraheemsmart</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/abdurraheemsmart/nanoclaw/logs/openviking.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/abdurraheemsmart/nanoclaw/logs/openviking.error.log</string>
+</dict>
+</plist>

@@ -412,6 +412,7 @@ async function runQuery(
         'mcp__nanoclaw__*',
         'mcp__gmail__*',
         'mcp__computer__*',
+        'mcp__memory__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -436,6 +437,16 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
+          },
+        },
+        memory: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'memory-mcp.js')],
+          env: {
+            OPENVIKING_URL: 'http://host.docker.internal:1933',
+            OPENVIKING_ACCOUNT: 'ar',
+            OPENVIKING_USER: 'ar',
+            OPENVIKING_AGENT: containerInput.groupFolder,
           },
         },
       },

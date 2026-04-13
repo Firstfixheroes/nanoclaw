@@ -9,6 +9,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { CronExpressionParser } from 'cron-parser';
 
 const IPC_DIR = '/workspace/ipc';
@@ -61,6 +62,40 @@ server.tool(
     writeIpcFile(MESSAGES_DIR, data);
 
     return { content: [{ type: 'text' as const, text: 'Message sent.' }] };
+  },
+);
+
+server.tool(
+  'send_screenshot',
+  'Take a screenshot of the virtual desktop and send it to the user on WhatsApp as an image. This is the ONLY way to show the user what is on screen. The screenshot is handled entirely server-side — you never need to touch the base64 data.',
+  {
+    caption: z.string().describe('Caption text describing what is on screen'),
+  },
+  async (args: { caption: string }) => {
+    try {
+      const screenshotPath = '/tmp/screenshot-send.png';
+      execSync(`scrot -o ${screenshotPath}`, {
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':99' },
+        timeout: 10000,
+      });
+      const imageData = fs.readFileSync(screenshotPath);
+      const imageBase64 = imageData.toString('base64');
+
+      const data: Record<string, string | undefined> = {
+        type: 'message',
+        chatJid,
+        text: args.caption,
+        imageBase64,
+        groupFolder,
+        timestamp: new Date().toISOString(),
+      };
+      writeIpcFile(MESSAGES_DIR, data);
+
+      return { content: [{ type: 'text' as const, text: 'Screenshot captured and sent to WhatsApp.' }] };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { content: [{ type: 'text' as const, text: `Screenshot send failed: ${msg}` }], isError: true };
+    }
   },
 );
 
