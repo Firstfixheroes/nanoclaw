@@ -41,10 +41,11 @@ const server = new McpServer({
 
 server.tool(
   'send_message',
-  "Send a message to the user or group immediately while you're still running. Use this for progress updates or to send multiple messages. You can call this multiple times.",
+  "Send a message to the user or group immediately while you're still running. Use this for progress updates, to send multiple messages, or to send screenshots/images. You can call this multiple times.",
   {
-    text: z.string().describe('The message text to send'),
+    text: z.string().describe('The message text to send (used as caption when sending an image)'),
     sender: z.string().optional().describe('Your role/identity name (e.g. "Researcher"). When set, messages appear from a dedicated bot in Telegram.'),
+    imageBase64: z.string().optional().describe('Base64-encoded PNG/JPEG image to send (e.g. from a screenshot). The text becomes the image caption.'),
   },
   async (args) => {
     const data: Record<string, string | undefined> = {
@@ -52,6 +53,7 @@ server.tool(
       chatJid,
       text: args.text,
       sender: args.sender || undefined,
+      imageBase64: args.imageBase64 || undefined,
       groupFolder,
       timestamp: new Date().toISOString(),
     };

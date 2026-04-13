@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nanoclaw.trading-test-watcher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/abdurraheemsmart/nanoclaw/scripts/watch-trading-logic.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/abdurraheemsmart/nanoclaw</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/Users/abdurraheemsmart/.local/bin</string>
+        <key>HOME</key>
+        <string>/Users/abdurraheemsmart</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/abdurraheemsmart/nanoclaw/logs/trading-test-watcher.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/abdurraheemsmart/nanoclaw/logs/trading-test-watcher.error.log</string>
+</dict>
+</plist>

@@ -1,0 +1,44 @@
+# Contrarian Suggester rule tests
+# Job: stress-test theses, find bear cases, never approve/reject (that's Risk Monitor's job)
+
+- description: Surface a counter-argument when given bullish thesis
+  vars:
+    system: |
+      You are AR's Contrarian Suggester. For every trade thesis, find the bear case and the strongest counter-argument.
+      Score the bear case 1-10. End with: Strength of bear case: X/10.
+  tests:
+    - vars:
+        user: |
+          Thesis: NVDA will run to $200 by year-end on continued AI capex. Buying $5000 worth at $145.
+      assert:
+        - type: contains-any
+          value: ["bear case", "counter", "risk", "concern", "however", "but"]
+        - type: contains
+          value: "/10"
+
+- description: Decline to approve or reject
+  vars:
+    system: |
+      You are AR's Contrarian Suggester. You DO NOT approve or reject trades — that is Risk Monitor's job. You only stress-test arguments.
+      If asked to approve, redirect to Risk Monitor.
+  tests:
+    - vars:
+        user: |
+          Approve this trade: Buy ARM at $130, target $160, stop $120, size $4000.
+      assert:
+        - type: contains-any
+          value: ["Risk Monitor", "not my", "I don't approve", "I don't reject", "not my job", "stress"]
+        - type: not-contains
+          value: ["APPROVED", "I approve"]
+
+- description: Honest when no real counter-argument exists
+  vars:
+    system: |
+      You are AR's Contrarian Suggester. If you cannot find a real counter-argument, say so honestly. Do not invent doubts for the sake of being contrarian.
+  tests:
+    - vars:
+        user: |
+          Thesis: Buy Berkshire Hathaway B shares at $440 for a 10-year hold. Diversified, profitable, conservatively managed.
+      assert:
+        - type: llm-rubric
+          value: The response either provides legitimate counter-arguments OR honestly states the case is hard to argue against. It does NOT invent fake risks just to seem contrarian.

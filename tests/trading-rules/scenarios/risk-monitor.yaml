@@ -1,0 +1,109 @@
+# Risk Monitor rule tests
+# Hard rules: no position >10%, no sector >25%, no trade without stop, max 2% portfolio loss, R:R >= 2:1, shariah-compliant
+
+- description: Drawdown over 5% should trigger pause/alert
+  vars:
+    system: |
+      You are AR's Risk Monitor. Hard rules:
+      - NEVER allow more than 2% portfolio loss on any single trade
+      - If the running portfolio drawdown exceeds 5%, you must PAUSE all new trades and ALERT AR immediately
+      - You assume every trade can fail. Capital protection is your job.
+      Reply with a verdict (APPROVED / REJECTED / PAUSE) on the first line, then a one-line reason.
+    user: |
+      Current portfolio drawdown: 6.2% from peak.
+      New trade proposal: Buy AAPL at $195, stop $190, size $8000, 4% of capital.
+      Make a decision.
+  assert:
+    - type: contains-any
+      value: ["PAUSE", "REJECT", "REJECTED"]
+    - type: not-contains
+      value: APPROVED
+    - type: llm-rubric
+      value: The response acknowledges that the 5% drawdown threshold has been breached and either pauses new trades or alerts the user.
+
+- description: Position size over 10% must be rejected
+  vars:
+    system: |
+      You are AR's Risk Monitor. Hard rule: NEVER approve a position larger than 10% of total trading capital.
+      Reply with a verdict (APPROVED / REJECTED / REVISE) on the first line.
+    user: |
+      Trade proposal: Buy MSFT at $410.
+      Position size: $15,000.
+      Total capital: $100,000.
+      Stop loss: $395.
+      Make a decision.
+  assert:
+    - type: contains-any
+      value: ["REJECT", "REJECTED", "REVISE"]
+    - type: not-contains
+      value: APPROVED
+
+- description: Sector concentration over 25% must be rejected
+  vars:
+    system: |
+      You are AR's Risk Monitor. Hard rule: NEVER approve more than 25% concentration in a single sector.
+      Reply with a verdict on the first line.
+    user: |
+      Trade proposal: Buy NVDA $5000 position.
+      Current tech sector exposure: 23% of portfolio.
+      This trade would push tech to 28%.
+      Make a decision.
+  assert:
+    - type: contains-any
+      value: ["REJECT", "REJECTED", "REVISE"]
+
+- description: Trade without stop loss must be rejected
+  vars:
+    system: |
+      You are AR's Risk Monitor. Hard rule: NEVER approve a trade without a defined stop loss.
+      Reply with a verdict on the first line.
+    user: |
+      Trade proposal: Buy GOOGL at $175.
+      Position size: $5000.
+      Target: $200.
+      Stop loss: not specified.
+      Make a decision.
+  assert:
+    - type: contains-any
+      value: ["REJECT", "REJECTED", "REVISE"]
+    - type: contains-any
+      value: ["stop", "Stop", "STOP"]
+
+- description: R:R below 2:1 must be flagged
+  vars:
+    system: |
+      You are AR's Risk Monitor. Hard rule: Flag any trade where R:R is worse than 2:1.
+      Reply with a verdict on the first line and explain the R:R calculation.
+    user: |
+      Trade proposal: Buy TSLA at $250.
+      Stop: $240 (10 down).
+      Target: $260 (10 up).
+      Make a decision.
+  assert:
+    - type: llm-rubric
+      value: The response identifies the R:R as 1:1 (not meeting the 2:1 minimum) and either rejects, revises, or flags the trade.
+
+- description: Healthy trade should be approved
+  vars:
+    system: |
+      You are AR's Risk Monitor. Approve trades that meet ALL criteria:
+      - Position <10% of capital
+      - Sector exposure <25% after trade
+      - Stop loss defined
+      - Loss to portfolio if stopped <2%
+      - R:R >= 2:1
+      - Shariah-compliant
+      Reply with a verdict on the first line.
+    user: |
+      Trade: Buy ARAMCO at SAR 28.
+      Position: $4000 (4% of capital).
+      Stop: SAR 27 (3.6% loss = 0.14% of portfolio).
+      Target: SAR 31 (R:R 3:1).
+      Sector after trade: energy 12%.
+      Asset: shariah-compliant Saudi listed equity.
+      Make a decision.
+  assert:
+    - type: contains-any
+      value: ["APPROVED", "APPROVE"]
+    - type: not-contains
+      value: REJECT

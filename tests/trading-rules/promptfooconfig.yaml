@@ -1,0 +1,32 @@
+# Promptfoo config for AR's trading sub-agent rules
+#
+# Run with: bash scripts/test-trading-logic.sh
+# Auto-runs when any data/sessions/*/.claude/agents/*.md file changes
+# (via the trading-test-watcher launchd service).
+
+description: AR's trading sub-agent rule enforcement tests
+
+prompts:
+  - id: agent-test-prompt
+    raw: |
+      [SYSTEM]
+      {{system}}
+
+      [USER]
+      {{user}}
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-5
+    label: claude-sonnet
+    config:
+      max_tokens: 1024
+      temperature: 0.2
+
+defaultTest:
+  providerOutputJsonSchema: null
+
+tests:
+  - file://scenarios/risk-monitor.yaml
+  - file://scenarios/trading-strategist.yaml
+  - file://scenarios/executioner.yaml
+  - file://scenarios/contrarian-suggester.yaml

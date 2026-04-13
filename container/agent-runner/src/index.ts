@@ -411,6 +411,7 @@ async function runQuery(
         'NotebookEdit',
         'mcp__nanoclaw__*',
         'mcp__gmail__*',
+        'mcp__computer__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -429,6 +430,13 @@ async function runQuery(
         gmail: {
           command: 'npx',
           args: ['-y', '@gongrzhe/server-gmail-autoauth-mcp'],
+        },
+        computer: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
+          env: {
+            DISPLAY: process.env.DISPLAY || ':99',
+          },
         },
       },
       hooks: {
