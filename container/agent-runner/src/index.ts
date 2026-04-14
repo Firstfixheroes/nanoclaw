@@ -415,6 +415,7 @@ async function runQuery(
         'mcp__computer__*',
         'mcp__memory__*',
         'mcp__firstfix__*',
+        'mcp__hiba__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -447,6 +448,14 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
+          },
+        },
+        hiba: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'hiba-mcp.js')],
+          env: {
+            HIBA_SUPABASE_URL: 'https://cmytsmxifertyasvirnm.supabase.co',
+            HIBA_SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNteXRzbXhpZmVydHlhc3Zpcm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MzQ1ODksImV4cCI6MjA4NjIxMDU4OX0.Iur-cTG9dK8px5oOPzt2KzLEVRnPxSidBgC5BAb6qBE',
           },
         },
         firstfix: {
