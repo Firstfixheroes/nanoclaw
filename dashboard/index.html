@@ -97,6 +97,7 @@ pre{font-size:11px;background:var(--s2);padding:12px;border-radius:8px;overflow-
 <div class="ni" data-t="construction"><div class="dot g"></div><span>QS Swarm</span></div>
 <div class="sep"><span>System</span></div>
 <div class="ni" data-t="chat"><div class="dot g"></div><span>Talk to Claw</span></div>
+<div class="ni" data-t="computer"><div class="dot am"></div><span>Computer</span></div>
 <div class="ni" data-t="schedule"><div class="dot"></div><span>Schedule</span></div>
 <div class="ni" data-t="agents"><div class="dot"></div><span>18 Agents</span></div>
 </div></div>
@@ -217,6 +218,37 @@ pre{font-size:11px;background:var(--s2);padding:12px;border-radius:8px;overflow-
 <div class="ch-i"><input id="ci" placeholder="Message Claw..." onkeydown="if(event.key==='Enter')snd()"><button onclick="snd()">Send</button></div>
 </div>
 
+<!-- COMPUTER -->
+<div class="ct hd" id="t-computer">
+<div class="sr">
+<div class="ss"><div class="v" id="comp-status"><span class="tl am">Checking</span></div><div class="l">Container</div></div>
+<div class="ss"><div class="v">1280x800</div><div class="l">Resolution</div></div>
+<div class="ss"><div class="v"><span class="tl g">Chromium</span></div><div class="l">Browser</div></div>
+<div class="ss"><div class="v"><button class="btn btn-sm btn-gold" onclick="askClaw('Take a screenshot and send it to me')">Screenshot</button></div><div class="l">Capture</div></div>
+</div>
+<div class="cd f">
+<h3>Claw's Computer <span style="font-size:10px;color:var(--t2);text-transform:none;letter-spacing:0" id="vnc-status">Connecting...</span></h3>
+<div id="vnc-container" style="background:#1a1a2e;border-radius:8px;overflow:hidden;position:relative;min-height:400px;display:flex;align-items:center;justify-content:center">
+<div id="vnc-placeholder" style="text-align:center;color:var(--t2);padding:40px">
+<p style="font-size:14px;margin-bottom:8px">Virtual Desktop</p>
+<p style="font-size:11px">When Claw is working, you can watch its screen here.</p>
+<p style="font-size:11px;margin-top:12px">VNC stream available at <b>http://187.77.182.68:6080/vnc.html</b> when a container is running.</p>
+<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+<button class="btn btn-gold" onclick="askClaw('Open google.com on your virtual desktop')">Open Browser</button>
+<button class="btn btn-outline" onclick="window.open('http://187.77.182.68:6080/vnc.html','_blank')">Open Full VNC</button>
+</div>
+</div>
+<iframe id="vnc-frame" style="width:100%;height:500px;border:none;display:none" src=""></iframe>
+</div>
+<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-sm btn-outline" onclick="askClaw('Open LinkedIn in the browser')">LinkedIn</button>
+<button class="btn btn-sm btn-outline" onclick="askClaw('Open the FirstFix system in the browser')">FirstFix</button>
+<button class="btn btn-sm btn-outline" onclick="askClaw('Open Supabase dashboard for Hiba')">Hiba Supabase</button>
+<button class="btn btn-sm btn-outline" onclick="askClaw('Open Gmail in the browser')">Gmail</button>
+<button class="btn btn-sm btn-outline" onclick="askClaw('Open Wise business account in the browser')">Wise</button>
+</div>
+</div></div>
+
 <!-- SCHEDULE -->
 <div class="ct hd" id="t-schedule"><div class="cd f"><h3>Daily Automated Schedule</h3><div id="sl"></div></div></div>
 
@@ -327,6 +359,16 @@ $('#sl').innerHTML=schedHtml;
 // Also show on overview as compact cards
 const schedCards=(d.tasks||[]).map(t=>{const lb=t.prompt.replace(/^\[.*?\]\s*/,'').slice(0,50);const time=sm[t.schedule_value]||t.schedule_value;return'<div style="background:var(--s2);padding:8px 10px;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span>'+esc(lb)+'</span><span class="tl g" style="flex-shrink:0">'+time+'</span></div>'}).join('');
 $('#sl-overview').innerHTML=schedCards;
+// Container/VNC status
+if(d.container){
+  const cs=$('#comp-status');
+  if(d.container.running){cs.innerHTML='<span class="tl g">Running</span>';
+    if(d.vncPort){$('#vnc-status').textContent='VNC on port '+d.vncPort;
+      const frame=$('#vnc-frame');
+      if(frame.style.display==='none'){frame.src='http://187.77.182.68:6080/vnc_lite.html?autoconnect=true&resize=scale';frame.style.display='block';$('#vnc-placeholder').style.display='none'}
+    }
+  }else{cs.innerHTML='<span class="tl am">Idle</span>';$('#vnc-status').textContent='Container not running';$('#vnc-frame').style.display='none';$('#vnc-placeholder').style.display='block'}
+}
 }catch(e){console.error(e)}}
 
 async function loadFiles(){

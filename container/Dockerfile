@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     imagemagick \
     xclip \
     fluxbox \
+    x11vnc \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Chromium path for agent-browser
@@ -74,7 +75,7 @@ ENV SCREEN_DEPTH=24
 # Container input (prompt, group info) is passed via stdin JSON.
 # Credentials are injected by the host's credential proxy — never passed here.
 # Follow-up messages arrive via IPC files in /workspace/ipc/input/
-RUN printf '#!/bin/bash\nset -e\n\n# Start virtual display\nXvfb :99 -screen 0 ${SCREEN_WIDTH}x${SCREEN_HEIGHT}x${SCREEN_DEPTH} -ac +extension GLX +render -noreset &\nXVFB_PID=$!\nsleep 0.5\n\n# Start minimal window manager\nfluxbox &>/dev/null &\nsleep 0.3\n\n# Restore baked skills if any are missing from the mounted .claude/skills/.\n# This guarantees the image-baked skills are always available even if the\n# host-synced copy was wiped or never created.\nmkdir -p /home/node/.claude/skills\nfor skill in /opt/nanoclaw-skills/*/; do\n  name=$(basename "$skill")\n  if [ ! -d "/home/node/.claude/skills/$name" ]; then\n    cp -r "$skill" "/home/node/.claude/skills/$name"\n  fi\ndone\n\ncd /app && npx tsc --outDir /tmp/dist 2>&1 >&2\nln -s /app/node_modules /tmp/dist/node_modules\nchmod -R a-w /tmp/dist\ncat > /tmp/input.json\nnode /tmp/dist/index.js < /tmp/input.json\n\n# Cleanup\nkill $XVFB_PID 2>/dev/null || true\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+RUN printf '#!/bin/bash\nset -e\n\n# Start virtual display\nXvfb :99 -screen 0 ${SCREEN_WIDTH}x${SCREEN_HEIGHT}x${SCREEN_DEPTH} -ac +extension GLX +render -noreset &\nXVFB_PID=$!\nsleep 0.5\n\n# Start VNC server on the virtual display (port 5900, no password, localhost only)\nx11vnc -display :99 -nopw -listen 0.0.0.0 -rfbport 5900 -shared -forever -bg 2>/dev/null\n\n# Start minimal window manager\nfluxbox &>/dev/null &\nsleep 0.3\n\n# Restore baked skills\nmkdir -p /home/node/.claude/skills\nfor skill in /opt/nanoclaw-skills/*/; do\n  name=$(basename "$skill")\n  if [ ! -d "/home/node/.claude/skills/$name" ]; then\n    cp -r "$skill" "/home/node/.claude/skills/$name"\n  fi\ndone\n\ncd /app && npx tsc --outDir /tmp/dist 2>&1 >&2\nln -s /app/node_modules /tmp/dist/node_modules\nchmod -R a-w /tmp/dist\ncat > /tmp/input.json\nnode /tmp/dist/index.js < /tmp/input.json\n\n# Cleanup\nkill $XVFB_PID 2>/dev/null || true\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Set ownership to node user (non-root) for writable directories
 RUN chown -R node:node /workspace && chmod 777 /home/node
