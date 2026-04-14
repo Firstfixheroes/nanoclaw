@@ -411,6 +411,7 @@ async function runQuery(
         'NotebookEdit',
         'mcp__nanoclaw__*',
         'mcp__gmail__*',
+        'mcp__gmail_steffan__*',
         'mcp__computer__*',
         'mcp__memory__*',
       ],
@@ -431,6 +432,14 @@ async function runQuery(
         gmail: {
           command: 'npx',
           args: ['-y', '@gongrzhe/server-gmail-autoauth-mcp'],
+        },
+        gmail_steffan: {
+          command: 'npx',
+          args: ['-y', '@gongrzhe/server-gmail-autoauth-mcp'],
+          env: {
+            GMAIL_MCP_CREDENTIALS_PATH: '/home/node/.gmail-mcp-steffan/credentials.json',
+            GMAIL_MCP_OAUTH_PATH: '/home/node/.gmail-mcp-steffan/gcp-oauth.keys.json',
+          },
         },
         computer: {
           command: 'node',

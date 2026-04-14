@@ -177,15 +177,20 @@ function buildVolumeMounts(
     });
   }
 
+  // Steffan Gmail credentials (second account)
+  const gmailSteffanDir = path.join(homeDir, '.gmail-mcp-steffan');
+  if (fs.existsSync(gmailSteffanDir)) {
+    mounts.push({
+      hostPath: gmailSteffanDir,
+      containerPath: '/home/node/.gmail-mcp-steffan',
+      readonly: false,
+    });
+  }
+
   // Self-healing SSH key (main group only) — allows system-doctor agent
   // to SSH into the host and fix issues without AR needing terminal access
   if (isMain) {
-    const sshKeyDir = path.join(
-      DATA_DIR,
-      'sessions',
-      group.folder,
-      '.ssh',
-    );
+    const sshKeyDir = path.join(DATA_DIR, 'sessions', group.folder, '.ssh');
     if (fs.existsSync(sshKeyDir)) {
       mounts.push({
         hostPath: sshKeyDir,
