@@ -342,7 +342,56 @@ async function runAgent(
   onOutput?: (output: ContainerOutput) => Promise<void>,
 ): Promise<'success' | 'error'> {
   const isMain = group.isMain === true;
-  const sessionId = sessions[group.folder];
+  let sessionId = sessions[group.folder];
+
+  // Auto-session-reset: check if the session's transcript is too large (>500KB)
+  // or too old (>4 hours). Large sessions slow down every subsequent message.
+  if (sessionId) {
+    const sessDir = path.join(
+      DATA_DIR,
+      'sessions',
+      group.folder,
+      '.claude',
+      'projects',
+    );
+    try {
+      // Find session transcript file
+      const findTranscript = (dir: string): string | null => {
+        if (!fs.existsSync(dir)) return null;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.isDirectory()) {
+            const found = findTranscript(path.join(dir, entry.name));
+            if (found) return found;
+          } else if (entry.name.endsWith('.jsonl')) {
+            return path.join(dir, entry.name);
+          }
+        }
+        return null;
+      };
+      const transcript = findTranscript(sessDir);
+      if (transcript) {
+        const stat = fs.statSync(transcript);
+        const sizeKB = stat.size / 1024;
+        const ageHours =
+          (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
+        if (sizeKB > 500 || ageHours > 4) {
+          logger.info(
+            {
+              group: group.name,
+              sizeKB: Math.round(sizeKB),
+              ageHours: Math.round(ageHours * 10) / 10,
+            },
+            'Auto-resetting large/old session for faster response',
+          );
+          delete sessions[group.folder];
+          deleteSession(group.folder);
+          sessionId = undefined;
+        }
+      }
+    } catch {
+      // Ignore errors in session check — not critical
+    }
+  }
 
   // Update tasks snapshot for container to read (filtered by group)
   const tasks = getAllTasks();

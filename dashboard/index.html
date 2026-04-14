@@ -220,6 +220,13 @@ pre{font-size:11px;background:var(--s2);padding:12px;border-radius:8px;overflow-
 <!-- SCHEDULE -->
 <div class="ct hd" id="t-schedule"><div class="cd f"><h3>Daily Automated Schedule</h3><div id="sl"></div></div></div>
 
+<!-- FILES -->
+<div class="ct hd" id="t-files">
+<div class="cd f">
+<h3>Generated Documents <button class="btn btn-sm btn-outline" onclick="loadFiles()">Refresh</button></h3>
+<div id="file-list"><div class="em">Loading documents...</div></div>
+</div></div>
+
 <!-- AGENTS -->
 <div class="ct hd" id="t-agents"><div class="gr">
 <div class="cd"><h3>Trading <span class="tl g" style="font-size:9px">5 active</span></h3><div class="sc"><span>trading-strategist</span><span class="tl g">On</span></div><div class="sc"><span>risk-monitor</span><span class="tl g">On</span></div><div class="sc"><span>executioner</span><span class="tl g">On</span></div><div class="sc"><span>contrarian-suggester</span><span class="tl g">On</span></div><div class="sc"><span>proactive-reporter</span><span class="tl g">On</span></div></div>
@@ -321,6 +328,19 @@ $('#sl').innerHTML=schedHtml;
 const schedCards=(d.tasks||[]).map(t=>{const lb=t.prompt.replace(/^\[.*?\]\s*/,'').slice(0,50);const time=sm[t.schedule_value]||t.schedule_value;return'<div style="background:var(--s2);padding:8px 10px;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span>'+esc(lb)+'</span><span class="tl g" style="flex-shrink:0">'+time+'</span></div>'}).join('');
 $('#sl-overview').innerHTML=schedCards;
 }catch(e){console.error(e)}}
+
+async function loadFiles(){
+  try{
+    const r=await fetch('/api/files');
+    const files=await r.json();
+    if(!files.length){$('#file-list').innerHTML='<div class="em">No documents yet.</div>';return}
+    $('#file-list').innerHTML=files.map(f=>{
+      const name=f.split('/').pop();
+      const folder=f.includes('/')?f.split('/').slice(0,-1).join('/'):'root';
+      return'<div class="sc"><span style="flex:1"><b>'+esc(name)+'</b><br><span style="font-size:10px;color:var(--t2)">'+esc(folder)+'</span></span><a href="/files/'+encodeURIComponent(f)+'" target="_blank" class="btn btn-sm btn-outline">View</a></div>';
+    }).join('');
+  }catch(e){console.error(e)}
+}
 
 async function snd(){const i=$('#ci'),t=i.value.trim();if(!t)return;i.value='';$('#cm').innerHTML+='<div class="ch-b me"><div class="bbl">'+esc(t)+'</div><div class="mt">You · now</div></div>';$('#cm').scrollTop=$('#cm').scrollHeight;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});toast('Sent to Claw');setTimeout(ld,5000)}
 ld();setInterval(ld,30000);
