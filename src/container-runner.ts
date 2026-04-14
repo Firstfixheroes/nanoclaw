@@ -177,6 +177,24 @@ function buildVolumeMounts(
     });
   }
 
+  // Self-healing SSH key (main group only) — allows system-doctor agent
+  // to SSH into the host and fix issues without AR needing terminal access
+  if (isMain) {
+    const sshKeyDir = path.join(
+      DATA_DIR,
+      'sessions',
+      group.folder,
+      '.ssh',
+    );
+    if (fs.existsSync(sshKeyDir)) {
+      mounts.push({
+        hostPath: sshKeyDir,
+        containerPath: '/home/node/.ssh',
+        readonly: true,
+      });
+    }
+  }
+
   // Per-group IPC namespace: each group gets its own IPC directory
   // This prevents cross-group privilege escalation via IPC
   const groupIpcDir = resolveGroupIpcPath(group.folder);
