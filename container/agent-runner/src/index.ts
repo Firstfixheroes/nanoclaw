@@ -415,6 +415,7 @@ async function runQuery(
         'mcp__computer__*',
         'mcp__memory__*',
         'mcp__firstfix__*',
+        'mcp__alpaca__*',
         'mcp__hiba__*',
       ],
       env: sdkEnv,
@@ -448,6 +449,15 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
+          },
+        },
+        alpaca: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'alpaca-mcp.js')],
+          env: {
+            ALPACA_API_KEY: process.env.ALPACA_API_KEY || '',
+            ALPACA_API_SECRET: process.env.ALPACA_API_SECRET || '',
+            ALPACA_BASE_URL: process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets/v2',
           },
         },
         hiba: {
