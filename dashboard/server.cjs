@@ -21,7 +21,7 @@ function apiData() {
     const tasks = db.prepare("SELECT id, substr(prompt, 1, 500) as prompt, schedule_value, status, next_run, last_result FROM scheduled_tasks WHERE status = 'active' ORDER BY next_run").all();
     const messages = db.prepare("SELECT content, sender_name, timestamp, is_from_me FROM messages ORDER BY timestamp DESC LIMIT 50").all();
     db.close();
-    return { tasks, messages, actionItems: readScratchpad('action-items.md'), followUps: readScratchpad('follow-ups.md'), financialSummary: readScratchpad('financial-summary.md'), cashflowForecast: readScratchpad('cashflow-forecast.md'), financialRisks: readScratchpad('financial-risks.md'), tradesPending: readScratchpad('trades-pending.md'), positionsCurrent: readScratchpad('positions-current.md'), sorAnalysis: readScratchpad('sor-competitive-analysis.md'), ffhTasks: readScratchpad('ffh-tasks.md') };
+    return { tasks, messages, actionItems: readScratchpad('action-items.md'), followUps: readScratchpad('follow-ups.md'), financialSummary: readScratchpad('financial-summary.md'), cashflowForecast: readScratchpad('cashflow-forecast.md'), financialRisks: readScratchpad('financial-risks.md'), tradesPending: readScratchpad('trades-pending.md'), positionsCurrent: readScratchpad('positions-current.md'), sorAnalysis: readScratchpad('sor-competitive-analysis.md'), ffhTasks: readScratchpad('ffh-tasks.md'), emailCleanup: readScratchpad('email-cleanup.json') };
   } catch(e) { if (db) db.close(); return { error: e.message }; }
 }
 

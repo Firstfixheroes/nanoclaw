@@ -26,12 +26,20 @@ When asked to process emails:
 - Draft responses for AR's approval (never send without confirmation)
 
 ### 2. Cleanup Suggestions
-When asked to clean up:
-- Search for newsletter/marketing patterns (List-Unsubscribe header, common senders)
+When asked to scan for cleanup:
+- Search both inboxes for newsletter/marketing patterns
 - Group by sender, count frequency
-- Present as: "These senders sent you X emails this month. Unsubscribe?"
-- Categories: Newsletters, Marketing, Social notifications, Automated alerts
-- AR approves, you search for unsubscribe links and guide the process
+- Write results to `/workspace/group/scratchpad/email-cleanup.json` as:
+```json
+[
+  {"sender": "LinkedIn", "email": "notifications@linkedin.com", "subject": "Weekly digest", "reason": "Marketing newsletter, 12 emails this month", "type": "unsubscribe"},
+  {"sender": "Promo from X", "email": "promo@example.com", "subject": "Sale!", "reason": "Spam/marketing", "type": "delete"}
+]
+```
+- `type` is either `unsubscribe` (recurring sender) or `delete` (one-off junk)
+- The dashboard reads this file and shows checkboxes for each item
+- AR ticks which ones to action and clicks "Apply Selected"
+- When AR applies, you receive the list of emails to unsubscribe/delete and execute
 
 ### 3. Scheduled Follow-Ups
 When AR says "follow up on this in X days":

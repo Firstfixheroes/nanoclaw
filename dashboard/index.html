@@ -155,10 +155,20 @@ pre{font-size:11px;background:var(--s2);padding:12px;border-radius:8px;overflow-
 <div class="gr g2">
 <div class="cd"><h3>Quick Actions</h3>
 <button class="btn btn-gold" style="width:100%;margin-bottom:8px" onclick="askClaw('Check both inboxes for unread emails and summarise them')">Check Emails Now</button>
-<button class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="askClaw('Suggest newsletters and marketing emails I should unsubscribe from')">Find Unsubscribes</button>
+<button class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="askClaw('Scan both inboxes for newsletters, marketing, and spam. Save the results to scratchpad/email-cleanup.json as an array of objects with fields: sender, subject, email, reason, type (unsubscribe/delete). Then tell me how many you found.')">Scan for Cleanup</button>
 <button class="btn btn-outline" style="width:100%" onclick="askClaw('Draft a follow-up for my most recent unanswered email')">Draft Follow-Up</button>
 </div>
-<div class="cd"><h3>Follow-Up Queue</h3><div id="fl2"><div class="em">No follow-ups scheduled. Say "follow up in X days" after any email.</div></div></div>
+<div class="cd"><h3>Follow-Up Queue</h3><div id="fl2"><div class="em">No follow-ups scheduled.</div></div></div>
+</div>
+<div class="gr" style="margin-top:14px">
+<div class="cd f">
+<h3>Email Cleanup <span style="display:flex;gap:6px">
+<button class="btn btn-sm btn-outline" onclick="emailAction('keep_all')" style="color:var(--green)">Keep All</button>
+<button class="btn btn-sm btn-outline" onclick="emailAction('delete_all')" style="color:var(--red)">Delete All</button>
+<button class="btn btn-sm btn-gold" onclick="emailAction('apply')">Apply Selected</button>
+</span></h3>
+<div id="email-cleanup-list"><div class="em">Click "Scan for Cleanup" to find newsletters and junk to clear out.</div></div>
+</div>
 </div></div>
 
 <!-- TRADING -->
@@ -371,6 +381,23 @@ if(d.container){
 }
 }catch(e){console.error(e)}}
 
+// Email cleanup
+if(d.emailCleanup){
+  try{
+    const emails=JSON.parse(d.emailCleanup);
+    if(Array.isArray(emails)&&emails.length){
+      $('#email-cleanup-list').innerHTML=emails.map((e,i)=>{
+        const typeClass=e.type==='delete'?'r':'am';
+        return'<div class="ai" data-idx="'+i+'" style="display:flex;gap:8px;align-items:center">'+
+          '<input type="checkbox" checked data-email="'+esc(e.email||e.sender)+'" data-action="'+(e.type||'unsubscribe')+'">'+
+          '<span class="tl '+typeClass+'" style="flex-shrink:0;font-size:9px">'+(e.type==='delete'?'DELETE':'UNSUB')+'</span>'+
+          '<span style="flex:1"><b>'+esc(e.sender||'Unknown')+'</b><br><span style="font-size:10px;color:var(--t2)">'+esc(e.subject||e.reason||'')+'</span></span>'+
+          '</div>';
+      }).join('');
+    }
+  }catch(e){}
+}
+
 async function loadFiles(){
   try{
     const r=await fetch('/api/files');
@@ -382,6 +409,30 @@ async function loadFiles(){
       return'<div class="sc"><span style="flex:1"><b>'+esc(name)+'</b><br><span style="font-size:10px;color:var(--t2)">'+esc(folder)+'</span></span><a href="/files/'+encodeURIComponent(f)+'" target="_blank" class="btn btn-sm btn-outline">View</a></div>';
     }).join('');
   }catch(e){console.error(e)}
+}
+
+function emailAction(action){
+  if(action==='keep_all'){
+    document.querySelectorAll('#email-cleanup-list input[type=checkbox]').forEach(cb=>cb.checked=false);
+    toast('All marked to keep');return;
+  }
+  if(action==='delete_all'){
+    document.querySelectorAll('#email-cleanup-list input[type=checkbox]').forEach(cb=>cb.checked=true);
+    toast('All marked for cleanup');return;
+  }
+  // Apply — gather checked items and send to Claw
+  const items=[];
+  document.querySelectorAll('#email-cleanup-list input[type=checkbox]:checked').forEach(cb=>{
+    items.push({email:cb.dataset.email,action:cb.dataset.action});
+  });
+  if(!items.length){toast('Nothing selected');return;}
+  const unsubs=items.filter(i=>i.action==='unsubscribe');
+  const deletes=items.filter(i=>i.action==='delete');
+  let msg='Process these email cleanup actions:\\n';
+  if(unsubs.length)msg+=`Unsubscribe from ${unsubs.length} senders: ${unsubs.map(i=>i.email).join(', ')}\\n`;
+  if(deletes.length)msg+=`Delete/archive emails from ${deletes.length} senders: ${deletes.map(i=>i.email).join(', ')}\\n`;
+  msg+='Do this now and confirm when done.';
+  askClaw(msg);
 }
 
 async function snd(){const i=$('#ci'),t=i.value.trim();if(!t)return;i.value='';$('#cm').innerHTML+='<div class="ch-b me"><div class="bbl">'+esc(t)+'</div><div class="mt">You · now</div></div>';$('#cm').scrollTop=$('#cm').scrollHeight;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});toast('Sent to Claw');setTimeout(ld,5000)}
