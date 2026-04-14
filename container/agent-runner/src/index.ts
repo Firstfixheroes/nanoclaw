@@ -416,6 +416,8 @@ async function runQuery(
         'mcp__memory__*',
         'mcp__firstfix__*',
         'mcp__alpaca__*',
+        'mcp__crypto_com__*',
+        'mcp__shariah__*',
         'mcp__hiba__*',
       ],
       env: sdkEnv,
@@ -450,6 +452,18 @@ async function runQuery(
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
           },
+        },
+        crypto_com: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'crypto-com-mcp.js')],
+          env: {
+            CRYPTOCOM_API_KEY: process.env.CRYPTOCOM_API_KEY || '',
+            CRYPTOCOM_API_SECRET: process.env.CRYPTOCOM_API_SECRET || '',
+          },
+        },
+        shariah: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'shariah-screener-mcp.js')],
         },
         alpaca: {
           command: 'node',
