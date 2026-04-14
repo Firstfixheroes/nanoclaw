@@ -417,6 +417,7 @@ async function runQuery(
         'mcp__firstfix__*',
         'mcp__alpaca__*',
         'mcp__crypto_com__*',
+        'mcp__wise__*',
         'mcp__shariah__*',
         'mcp__hiba__*',
       ],
@@ -451,6 +452,14 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
+          },
+        },
+        wise: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'wise-mcp.js')],
+          env: {
+            WISE_API_TOKEN: process.env.WISE_API_TOKEN || '',
+            WISE_PROFILE_ID: process.env.WISE_PROFILE_ID || '28735690',
           },
         },
         crypto_com: {
