@@ -414,6 +414,7 @@ async function runQuery(
         'mcp__gmail_steffan__*',
         'mcp__computer__*',
         'mcp__memory__*',
+        'mcp__firstfix__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -446,6 +447,14 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'computer-use-mcp.js')],
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
+          },
+        },
+        firstfix: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'firstfix-mcp.js')],
+          env: {
+            FIRSTFIX_SUPABASE_URL: 'https://svhxaljwlzankgyxvzqn.supabase.co',
+            FIRSTFIX_SUPABASE_KEY: process.env.FIRSTFIX_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc',
           },
         },
         memory: {
