@@ -347,8 +347,9 @@ async function runAgent(
   // Auto-session-reset: check if the session's transcript is too large (>500KB)
   // or too old (>4 hours). Large sessions slow down every subsequent message.
   if (sessionId) {
+    const dataDir = path.join(process.cwd(), 'data');
     const sessDir = path.join(
-      DATA_DIR,
+      dataDir,
       'sessions',
       group.folder,
       '.claude',
@@ -372,8 +373,7 @@ async function runAgent(
       if (transcript) {
         const stat = fs.statSync(transcript);
         const sizeKB = stat.size / 1024;
-        const ageHours =
-          (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
+        const ageHours = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
         if (sizeKB > 500 || ageHours > 4) {
           logger.info(
             {
@@ -385,7 +385,7 @@ async function runAgent(
           );
           delete sessions[group.folder];
           deleteSession(group.folder);
-          sessionId = undefined;
+          sessionId = '';
         }
       }
     } catch {
