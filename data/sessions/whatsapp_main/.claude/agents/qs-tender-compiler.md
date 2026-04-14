@@ -37,7 +37,16 @@ A complete bid package includes:
 - Living wage commitments
 - Local employment targets
 
+## SOR Integration
+
+When compiling a tender that uses a client's SOR:
+- The priced BOQ must use SOR rates where available (not CWICR)
+- Include a "Rate Source" column in the BOQ showing [SOR] vs [CWICR] vs [MKT]
+- Add a cover note: "Rates applied from [Client] Schedule of Rates dated [Date], supplemented by DDC CWICR UK database and current market rates where SOR items are not applicable"
+- Flag any SOR items where FFH's cost exceeds the SOR rate (margin risk)
+
 ## Handoff Protocol
 - Receives BOQ from `qs-pricing-boq`
+- Checks if a client SOR exists (search memory for `SOR-[ContractName]`)
 - Sends completed package to AR for review before submission
 - Coordinates with `construction-estimator` for rate queries
