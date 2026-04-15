@@ -37,7 +37,17 @@ def get_system_prompt():
     if CLAUDE_MD.exists():
         full = CLAUDE_MD.read_text()
         # Take first 3000 chars to keep costs low
-        return f"You are Claw, AR's business partner AI. Here is your context:\n\n{full[:3000]}\n\nBe concise. No em dashes. Format for WhatsApp. Under 300 words per response."
+        return f"""You are Claw, AR's business partner AI. Here is your context:
+
+{full[:2000]}
+
+ROUTING RULES:
+- YOU handle: questions, summaries, email checks, status updates, task management, simple analysis, memory recall, general chat
+- ESCALATE to Claude (via escalate_to_claude tool) ONLY for: construction pricing/BOQ/SOR work, tender document editing, complex multi-step financial analysis, code generation
+- When escalating, tell AR: "This needs the heavy model — I've queued it up. You'll get the result shortly."
+- Never escalate simple questions just because you're unsure — try your best first
+
+Be concise. No em dashes. Format for WhatsApp. Under 300 words per response."""
     return "You are Claw, AR's business partner AI. Be concise. No em dashes."
 
 
@@ -98,10 +108,31 @@ def t_update_tasks(**kw):
         fp.write_text(existing.strip() + "\n" + task + "\n")
     return "Task added"
 
+def t_escalate_to_claude(**kw):
+    """Schedule a complex task for Claude when credits are available."""
+    task = kw.get("task_description", "")
+    # Write to IPC as a scheduled one-time task that NanoClaw will pick up
+    import sqlite3
+    db = sqlite3.connect(str(PROJECT_ROOT / "store" / "messages.db"))
+    import uuid
+    task_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+    # Schedule 1 minute from now
+    from datetime import timedelta
+    run_at = (datetime.utcnow() + timedelta(minutes=1)).isoformat()
+    db.execute(
+        "INSERT INTO scheduled_tasks (id, group_folder, chat_jid, prompt, schedule_type, schedule_value, next_run, status, created_at, context_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (task_id, 'whatsapp_main', '447868983354@s.whatsapp.net', task, 'once', run_at, run_at, 'active', now, 'isolated')
+    )
+    db.commit()
+    db.close()
+    return f"Escalated to Claude (task {task_id[:8]}). Will run when Claude credits are available. AR will get the result on WhatsApp."
+
 TOOL_MAP = {
     "ffh_jobs": t_ffh_jobs, "ffh_invoices": t_ffh_invoices, "ffh_snags": t_ffh_snags,
     "ffh_leads": t_ffh_leads, "hiba_status": t_hiba_status, "memory_recall": t_memory_recall,
     "read_tasks": t_read_tasks, "update_tasks": t_update_tasks,
+    "escalate_to_claude": t_escalate_to_claude,
 }
 
 OPENAI_TOOLS = [
@@ -113,6 +144,7 @@ OPENAI_TOOLS = [
     {"type":"function","function":{"name":"memory_recall","description":"Search long-term memory","parameters":{"type":"object","properties":{"query":{"type":"string","description":"Search query"}},"required":["query"]}}},
     {"type":"function","function":{"name":"read_tasks","description":"Read FFH task board","parameters":{"type":"object","properties":{}}}},
     {"type":"function","function":{"name":"update_tasks","description":"Add a task to the board","parameters":{"type":"object","properties":{"task":{"type":"string","description":"Task line e.g. '- [ ] (HIGH) Do something'"}},"required":["task"]}}},
+    {"type":"function","function":{"name":"escalate_to_claude","description":"Escalate a complex task to Claude (frontier model). Use ONLY for: construction pricing/BOQ/tenders, complex multi-step analysis, document editing, or when you cannot produce quality output. Do NOT escalate simple questions, summaries, or status checks.","parameters":{"type":"object","properties":{"task_description":{"type":"string","description":"Full task description for Claude to execute"}},"required":["task_description"]}}},
 ]
 
 
