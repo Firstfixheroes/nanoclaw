@@ -418,6 +418,7 @@ async function runQuery(
         'mcp__alpaca__*',
         'mcp__crypto_com__*',
         'mcp__wise__*',
+        'mcp__truelayer__*',
         'mcp__shariah__*',
         'mcp__hiba__*',
       ],
@@ -453,6 +454,10 @@ async function runQuery(
           env: {
             DISPLAY: process.env.DISPLAY || ':99',
           },
+        },
+        truelayer: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'truelayer-mcp.js')],
         },
         wise: {
           command: 'node',

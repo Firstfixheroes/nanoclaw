@@ -114,6 +114,42 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify(files));
   }
 
+  // TrueLayer OAuth callback
+  if (p === '/api/truelayer/callback') {
+    const query = url.parse(req.url, true).query;
+    const code = query.code;
+    if (code) {
+      // Exchange code for tokens
+      const https = require('https');
+      const postData = `grant_type=authorization_code&client_id=ffhaicfo-dbaf22&client_secret=dcf76322-cf15-454b-9aa4-c2a8bde50fb8&redirect_uri=http://187.77.182.68:8080/api/truelayer/callback&code=${code}`;
+      const tokenReq = https.request({
+        hostname: 'auth.truelayer.com', path: '/connect/token', method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) }
+      }, tokenRes => {
+        let data = '';
+        tokenRes.on('data', c => data += c);
+        tokenRes.on('end', () => {
+          try {
+            const tokens = JSON.parse(data);
+            // Save tokens
+            const tokenFile = path.join(PROJECT_ROOT, 'data', 'truelayer-tokens.json');
+            fs.writeFileSync(tokenFile, JSON.stringify(tokens, null, 2));
+            console.log('TrueLayer tokens saved');
+            res.writeHead(200, {'Content-Type':'text/html'});
+            res.end('<h1>Bank Connected!</h1><p>You can close this tab. Claw now has read-only access to your bank.</p>');
+          } catch(e) {
+            res.writeHead(500); res.end('Token exchange failed: ' + data);
+          }
+        });
+      });
+      tokenReq.write(postData);
+      tokenReq.end();
+      return;
+    }
+    res.writeHead(400); res.end('No code received');
+    return;
+  }
+
   if (p === '/api/send' && req.method === 'POST') {
     let body = '';
     req.on('data', c => body += c);
