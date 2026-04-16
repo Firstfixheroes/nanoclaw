@@ -277,13 +277,39 @@ async function buildContainerArgs(
     addHostMapping: false, // Nanoclaw already handles host gateway
     agent: agentIdentifier,
   });
+  // Check if OneCLI actually has secrets configured
+  let onecliHasSecrets = false;
   if (onecliApplied) {
+    try {
+      const secretsResp = await fetch(`${ONECLI_URL}/api/secrets`);
+      const secretsData = (await secretsResp.json()) as { data?: unknown[] };
+      onecliHasSecrets = Array.isArray(secretsData.data) && secretsData.data.length > 0;
+    } catch {
+      // Can't check — assume it has secrets if proxy applied
+      onecliHasSecrets = true;
+    }
+  }
+
+  if (onecliApplied && onecliHasSecrets) {
     logger.info({ containerName }, 'OneCLI gateway config applied');
   } else {
-    logger.warn(
-      { containerName },
-      'OneCLI gateway not reachable — container will have no credentials',
-    );
+    // OneCLI not available — fall back to OpenRouter if configured
+    const { readEnvFile } = await import('./env.js');
+    const envKeys = readEnvFile(['OPENROUTER_API_KEY']);
+    if (envKeys.OPENROUTER_API_KEY) {
+      // OpenRouter's /api/v1/messages is Anthropic-compatible
+      args.push('-e', `ANTHROPIC_API_KEY=${envKeys.OPENROUTER_API_KEY}`);
+      args.push('-e', 'ANTHROPIC_BASE_URL=https://openrouter.ai/api');
+      logger.info(
+        { containerName },
+        'Using OpenRouter as Anthropic-compatible fallback',
+      );
+    } else {
+      logger.warn(
+        { containerName },
+        'OneCLI gateway not reachable and no OpenRouter key — container will have no credentials',
+      );
+    }
   }
 
   // Runtime-specific args for host gateway resolution
