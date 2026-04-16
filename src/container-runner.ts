@@ -283,7 +283,8 @@ async function buildContainerArgs(
     try {
       const secretsResp = await fetch(`${ONECLI_URL}/api/secrets`);
       const secretsData = (await secretsResp.json()) as { data?: unknown[] };
-      onecliHasSecrets = Array.isArray(secretsData.data) && secretsData.data.length > 0;
+      onecliHasSecrets =
+        Array.isArray(secretsData.data) && secretsData.data.length > 0;
     } catch {
       // Can't check — assume it has secrets if proxy applied
       onecliHasSecrets = true;
@@ -293,16 +294,33 @@ async function buildContainerArgs(
   if (onecliApplied && onecliHasSecrets) {
     logger.info({ containerName }, 'OneCLI gateway config applied');
   } else {
-    // OneCLI not available — fall back to OpenRouter if configured
+    // OneCLI not available — fall back to direct env injection
     const { readEnvFile } = await import('./env.js');
-    const envKeys = readEnvFile(['OPENROUTER_API_KEY']);
+    const envKeys = readEnvFile([
+      'OPENROUTER_API_KEY',
+      'OPENAI_API_KEY',
+      'GEMINI_API_KEY',
+      'ALPACA_API_KEY',
+      'ALPACA_API_SECRET',
+      'ALPACA_BASE_URL',
+      'CRYPTOCOM_API_KEY',
+      'CRYPTOCOM_API_SECRET',
+      'WISE_API_TOKEN',
+      'WISE_PROFILE_ID',
+    ]);
     if (envKeys.OPENROUTER_API_KEY) {
       // OpenRouter's /api/v1/messages is Anthropic-compatible
       args.push('-e', `ANTHROPIC_API_KEY=${envKeys.OPENROUTER_API_KEY}`);
       args.push('-e', 'ANTHROPIC_BASE_URL=https://openrouter.ai/api');
+      // Inject all service API keys so MCP servers work
+      for (const [key, value] of Object.entries(envKeys)) {
+        if (key !== 'OPENROUTER_API_KEY') {
+          args.push('-e', `${key}=${value}`);
+        }
+      }
       logger.info(
         { containerName },
-        'Using OpenRouter as Anthropic-compatible fallback',
+        'Using OpenRouter fallback with direct env injection',
       );
     } else {
       logger.warn(
