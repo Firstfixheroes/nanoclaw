@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NanoClaw</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">AR</div>
+    <div><div class="logo-name">Command Centre</div><div class="logo-sub">POWERED BY CLAW</div></div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Main</div>
+    <a class="nav-link active" data-page="home" onclick="go('home')">
+      <span class="nav-dot green"></span>Overview
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Business</div>
+    <a class="nav-link" data-page="ffh" onclick="go('ffh')">
+      <span class="nav-dot green"></span>FFH London
+    </a>
+    <a class="nav-link" data-page="ffh-mgmt" onclick="go('ffh-mgmt')">
+      <span class="nav-dot green"></span>FFH Management
+    </a>
+    <a class="nav-link" data-page="hiba" onclick="go('hiba')">
+      <span class="nav-dot amber"></span>Hiba
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Banking</div>
+    <a class="nav-link" data-page="wise" onclick="go('wise')">
+      <span class="nav-dot green"></span>Wise
+    </a>
+    <a class="nav-link" data-page="lloyds" onclick="go('lloyds')">
+      <span class="nav-dot green"></span>Lloyds Business
+    </a>
+    <a class="nav-link" data-page="tide" onclick="go('tide')">
+      <span class="nav-dot amber"></span>Tide (FFH)
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Operations</div>
+    <a class="nav-link" data-page="trading" onclick="go('trading')">
+      <span class="nav-dot green"></span>Trading
+    </a>
+    <a class="nav-link" data-page="emails" onclick="go('emails')">
+      <span class="nav-dot green"></span>Emails
+    </a>
+    <a class="nav-link" data-page="construction" onclick="go('construction')">
+      <span class="nav-dot green"></span>QS Swarm
+    </a>
+  </div>
+
+  <div class="nav-group" style="margin-top:auto">
+    <div class="nav-label">System</div>
+    <a class="nav-link" data-page="chat" onclick="go('chat')">
+      <span class="nav-dot green"></span>Talk to Claw
+    </a>
+    <a class="nav-link" data-page="agents" onclick="go('agents')">
+      <span class="nav-dot"></span>Agent Swarm
+    </a>
+    <a class="nav-link" data-page="schedule" onclick="go('schedule')">
+      <span class="nav-dot"></span>Schedule
+    </a>
+    <a class="nav-link" data-page="computer" onclick="go('computer')">
+      <span class="nav-dot"></span>Claw Computer
+    </a>
+  </div>
+</nav>
+
+<main class="main">
+  <header class="topbar">
+    <h1 id="page-title">Overview</h1>
+    <div class="status-bar">
+      <span class="meta" id="last-updated"></span>
+      <button class="btn btn-outline btn-sm" onclick="loadData()">&#x21bb;</button>
+    </div>
+  </header>
+
+  <div class="content" id="content">
+    <!-- Pages rendered by JS -->
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
