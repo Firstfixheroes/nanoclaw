@@ -421,6 +421,7 @@ async function runQuery(
         'mcp__truelayer__*',
         'mcp__shariah__*',
         'mcp__hiba__*',
+        'mcp__image_gen__*',
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -502,6 +503,14 @@ async function runQuery(
           env: {
             FIRSTFIX_SUPABASE_URL: 'https://svhxaljwlzankgyxvzqn.supabase.co',
             FIRSTFIX_SUPABASE_KEY: process.env.FIRSTFIX_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc',
+          },
+        },
+        image_gen: {
+          command: 'node',
+          args: [path.join(path.dirname(mcpServerPath), 'image-gen-mcp.js')],
+          env: {
+            GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+            OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
           },
         },
         memory: {
