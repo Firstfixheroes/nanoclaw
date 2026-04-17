@@ -307,6 +307,8 @@ async function buildContainerArgs(
       'CRYPTOCOM_API_SECRET',
       'WISE_API_TOKEN',
       'WISE_PROFILE_ID',
+      'FFH_SUPABASE_ANON_KEY',
+      'HIBA_SUPABASE_ANON_KEY',
     ]);
     if (envKeys.OPENROUTER_API_KEY) {
       // OpenRouter's /api/v1/messages is Anthropic-compatible

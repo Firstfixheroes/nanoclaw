@@ -494,7 +494,7 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'hiba-mcp.js')],
           env: {
             HIBA_SUPABASE_URL: 'https://cmytsmxifertyasvirnm.supabase.co',
-            HIBA_SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNteXRzbXhpZmVydHlhc3Zpcm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MzQ1ODksImV4cCI6MjA4NjIxMDU4OX0.Iur-cTG9dK8px5oOPzt2KzLEVRnPxSidBgC5BAb6qBE',
+            HIBA_SUPABASE_KEY: process.env.HIBA_SUPABASE_ANON_KEY || '',
           },
         },
         firstfix: {
@@ -502,7 +502,7 @@ async function runQuery(
           args: [path.join(path.dirname(mcpServerPath), 'firstfix-mcp.js')],
           env: {
             FIRSTFIX_SUPABASE_URL: 'https://svhxaljwlzankgyxvzqn.supabase.co',
-            FIRSTFIX_SUPABASE_KEY: process.env.FIRSTFIX_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc',
+            FIRSTFIX_SUPABASE_KEY: process.env.FFH_SUPABASE_ANON_KEY || '',
           },
         },
         image_gen: {

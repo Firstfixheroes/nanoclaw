@@ -32,10 +32,10 @@ SCRATCHPAD = PROJECT_ROOT / "groups" / "whatsapp_main" / "scratchpad"
 IPC_DIR = PROJECT_ROOT / "data" / "ipc" / "whatsapp_main"
 
 # Supabase configs
-FFH_URL = "https://svhxaljwlzankgyxvzqn.supabase.co"
-FFH_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc"
-HIBA_URL = "https://cmytsmxifertyasvirnm.supabase.co"
-HIBA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNteXRzbXhpZmVydHlhc3Zpcm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MzQ1ODksImV4cCI6MjA4NjIxMDU4OX0.Iur-cTG9dK8px5oOPzt2KzLEVRnPxSidBgC5BAb6qBE"
+FFH_URL = os.environ.get("FFH_SUPABASE_URL", "https://svhxaljwlzankgyxvzqn.supabase.co")
+FFH_KEY = os.environ.get("FFH_SUPABASE_ANON_KEY", "")
+HIBA_URL = os.environ.get("HIBA_SUPABASE_URL", "https://cmytsmxifertyasvirnm.supabase.co")
+HIBA_KEY = os.environ.get("HIBA_SUPABASE_ANON_KEY", "")
 OV_URL = os.environ.get("OPENVIKING_URL", "http://localhost:1933")
 
 

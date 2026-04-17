@@ -26,10 +26,10 @@ IPC_DIR = PROJECT_ROOT / "data" / "ipc" / "whatsapp_main"
 SCRATCHPAD = PROJECT_ROOT / "groups" / "whatsapp_main" / "scratchpad"
 CLAUDE_MD = PROJECT_ROOT / "groups" / "whatsapp_main" / "CLAUDE.md"
 
-FFH_URL = "https://svhxaljwlzankgyxvzqn.supabase.co"
-FFH_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc"
-HIBA_URL = "https://cmytsmxifertyasvirnm.supabase.co"
-HIBA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNteXRzbXhpZmVydHlhc3Zpcm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MzQ1ODksImV4cCI6MjA4NjIxMDU4OX0.Iur-cTG9dK8px5oOPzt2KzLEVRnPxSidBgC5BAb6qBE"
+FFH_URL = os.environ.get("FFH_SUPABASE_URL", "https://svhxaljwlzankgyxvzqn.supabase.co")
+FFH_KEY = os.environ.get("FFH_SUPABASE_ANON_KEY", "")
+HIBA_URL = os.environ.get("HIBA_SUPABASE_URL", "https://cmytsmxifertyasvirnm.supabase.co")
+HIBA_KEY = os.environ.get("HIBA_SUPABASE_ANON_KEY", "")
 OV_URL = os.environ.get("OPENVIKING_URL", "http://localhost:1933")
 
 # Load system prompt from CLAUDE.md (trimmed to essentials)
@@ -109,24 +109,46 @@ def t_update_tasks(**kw):
     return "Task added"
 
 def t_escalate_to_claude(**kw):
-    """Schedule a complex task for Claude when credits are available."""
+    """Run a complex task using Claude via OpenRouter (cheaper than direct Anthropic)."""
     task = kw.get("task_description", "")
-    # Write to IPC as a scheduled one-time task that NanoClaw will pick up
-    import sqlite3
-    db = sqlite3.connect(str(PROJECT_ROOT / "store" / "messages.db"))
-    import uuid
-    task_id = str(uuid.uuid4())
-    now = datetime.utcnow().isoformat()
-    # Schedule 1 minute from now
-    from datetime import timedelta
-    run_at = (datetime.utcnow() + timedelta(minutes=1)).isoformat()
-    db.execute(
-        "INSERT INTO scheduled_tasks (id, group_folder, chat_jid, prompt, schedule_type, schedule_value, next_run, status, created_at, context_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (task_id, 'whatsapp_main', '447868983354@s.whatsapp.net', task, 'once', run_at, run_at, 'active', now, 'isolated')
-    )
-    db.commit()
-    db.close()
-    return f"Escalated to Claude (task {task_id[:8]}). Will run when Claude credits are available. AR will get the result on WhatsApp."
+
+    # Load OpenRouter key
+    or_key = ""
+    env_file = PROJECT_ROOT / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().split("\n"):
+            if line.startswith("OPENROUTER_API_KEY="):
+                or_key = line.split("=", 1)[1].strip().strip('"')
+
+    if not or_key:
+        return "No OpenRouter key configured. Cannot escalate."
+
+    try:
+        # Call Claude Sonnet via OpenRouter
+        system = get_system_prompt()
+        payload = json.dumps({
+            "model": "anthropic/claude-sonnet-4",
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": task}
+            ],
+            "max_tokens": 4000,
+        }).encode()
+
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions",
+            data=payload,
+            headers={"Authorization": f"Bearer {or_key}", "Content-Type": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=120)
+        result = json.loads(resp.read())
+        content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+        if content:
+            send_whatsapp(content)
+            return f"Claude completed the task via OpenRouter. Result sent to WhatsApp."
+        else:
+            return "Claude returned empty response."
+    except Exception as e:
+        return f"Escalation failed: {e}"
 
 TOOL_MAP = {
     "ffh_jobs": t_ffh_jobs, "ffh_invoices": t_ffh_invoices, "ffh_snags": t_ffh_snags,
@@ -199,46 +221,77 @@ def run_agent(prompt, max_rounds=3):
 
 
 def daemon_mode():
-    """Watch for new WhatsApp messages and respond."""
-    print(f"[{datetime.now()}] OpenAI responder daemon started (model: {MODEL})", file=sys.stderr)
+    """Watch for WhatsApp + dashboard messages and respond via GPT-4o-mini."""
+    print(f"[{datetime.now()}] OpenAI responder daemon started (model: {MODEL})", file=sys.stderr, flush=True)
     input_dir = IPC_DIR / "input"
     db_path = PROJECT_ROOT / "store" / "messages.db"
+    processed_ids = set()
+    # Load recently processed IDs to avoid re-processing on restart
+    processed_file = PROJECT_ROOT / "data" / "openai-processed.json"
+    try:
+        processed_ids = set(json.loads(processed_file.read_text()))
+    except:
+        pass
 
     while True:
-        # Check IPC input for dashboard messages
+        # 1. Check IPC input for dashboard messages
         input_dir.mkdir(parents=True, exist_ok=True)
         for fp in sorted(input_dir.glob("*.json")):
             try:
                 data = json.loads(fp.read_text())
                 fp.unlink()
                 if data.get("type") == "message" and data.get("text"):
-                    print(f"[{datetime.now()}] Processing: {data['text'][:60]}...", file=sys.stderr)
+                    print(f"[{datetime.now()}] Dashboard msg: {data['text'][:60]}...", file=sys.stderr, flush=True)
                     run_agent(data["text"])
             except Exception as e:
-                print(f"Error processing {fp}: {e}", file=sys.stderr)
+                print(f"Error: {fp}: {e}", file=sys.stderr, flush=True)
                 try: fp.unlink()
                 except: pass
 
-        # Check DB for unprocessed WhatsApp messages
+        # 2. Check DB for WhatsApp messages that need a response
+        #    In self-chat, ALL messages have is_from_me=1
+        #    So we look for messages that are NOT bot messages (not from Claw)
         try:
             import sqlite3
             db = sqlite3.connect(str(db_path))
-            # Get messages from last 5 minutes that are from the user (is_from_me=1) and not bot messages
-            cutoff = (datetime.utcnow().timestamp() - 300)
             rows = db.execute("""
-                SELECT id, content FROM messages
-                WHERE is_from_me = 1 AND is_bot_message = 0
-                AND timestamp > datetime(?, 'unixepoch')
-                AND id NOT IN (SELECT id FROM messages WHERE sender_name = 'AR (Dashboard)')
-                ORDER BY timestamp DESC LIMIT 1
-            """, (cutoff,)).fetchall()
+                SELECT id, content, timestamp FROM messages
+                WHERE is_bot_message = 0
+                AND content IS NOT NULL AND content != ''
+                AND content NOT LIKE 'Claw:%'
+                AND content NOT LIKE '[Local]%'
+                AND content NOT LIKE '[Dashboard]%'
+                ORDER BY timestamp DESC LIMIT 5
+            """).fetchall()
             db.close()
-            # We don't process DB messages here — NanoClaw handles WhatsApp.
-            # This daemon only handles dashboard IPC messages.
-        except:
-            pass
 
-        time.sleep(3)
+            for msg_id, content, ts in rows:
+                if msg_id in processed_ids:
+                    continue
+                # Only process messages from the last 5 minutes
+                try:
+                    from datetime import datetime as dt
+                    msg_time = dt.fromisoformat(ts.replace('Z', '+00:00')) if ts else None
+                    if msg_time and (datetime.utcnow().replace(tzinfo=None) - msg_time.replace(tzinfo=None)).total_seconds() > 300:
+                        processed_ids.add(msg_id)
+                        continue
+                except:
+                    pass
+
+                processed_ids.add(msg_id)
+                print(f"[{datetime.now()}] WhatsApp msg: {content[:60]}...", file=sys.stderr, flush=True)
+                try:
+                    run_agent(content)
+                except Exception as e:
+                    print(f"Error responding: {e}", file=sys.stderr, flush=True)
+
+            # Save processed IDs (keep last 200)
+            recent = list(processed_ids)[-200:]
+            processed_file.write_text(json.dumps(recent))
+        except Exception as e:
+            print(f"DB check error: {e}", file=sys.stderr, flush=True)
+
+        time.sleep(5)
 
 
 if __name__ == "__main__":

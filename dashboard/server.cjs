@@ -120,7 +120,7 @@ async function apiData() {
     let ffh = {};
     try {
       const FFH_URL = 'https://svhxaljwlzankgyxvzqn.supabase.co';
-      const FFH_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjUwOTc3NiwiZXhwIjoyMDgyMDg1Nzc2fQ.YiDKgAInonM_CJjzRun3Y7GW6zdkCN83LdAqsCBGEmY';
+      const FFH_SERVICE_KEY = process.env.FFH_SUPABASE_SERVICE_KEY || '';
       const https = require('https');
       const sbFetch = (table, params) => new Promise((res) => {
         const u = `${FFH_URL}/rest/v1/${table}?${params||'select=*'}`;

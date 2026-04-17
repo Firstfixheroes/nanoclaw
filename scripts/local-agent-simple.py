@@ -19,8 +19,8 @@ MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
 IPC_DIR = PROJECT_ROOT / "data" / "ipc" / "whatsapp_main"
 SCRATCHPAD = PROJECT_ROOT / "groups" / "whatsapp_main" / "scratchpad"
 
-FFH_URL = "https://svhxaljwlzankgyxvzqn.supabase.co"
-FFH_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHhhbGp3bHphbmtneXh2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MDk3NzYsImV4cCI6MjA4MjA4NTc3Nn0.tvdrCW0mm2-UygON3PvaDiu0Lg9JqHnm6VLZUzZtsqc"
+FFH_URL = os.environ.get("FFH_SUPABASE_URL", "https://svhxaljwlzankgyxvzqn.supabase.co")
+FFH_KEY = os.environ.get("FFH_SUPABASE_ANON_KEY", "")
 
 
 def supabase_get(table, params=""):
